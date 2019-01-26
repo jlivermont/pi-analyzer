@@ -2,6 +2,7 @@
 
 ## Introduction
 
+The pi-firewall is a collection of tools for protecting and monitoring a small home network.  It installs the latest community edition of [ntop](https://www.ntop.org/products/traffic-analysis/ntop/) for monitoring and anlyzing the home network.  It also configures the [UFW](https://wiki.ubuntu.com/UncomplicatedFirewall) firewall and enables [NAT](https://en.wikipedia.org/wiki/Network_address_translation).
 TBD
 
 ## Installation
