@@ -101,7 +101,7 @@ function configure_firewall {
   ufw allow from $INTERNAL_NETWORK_CIDR
   ufw allow $SSHD_PORT
   ufw allow from $INTERNAL_NETWORK_CIDR to any port $NTOPNG_PORT
-  ufw allow from $INTERNAL_NETWORK_CIDR to any port $
+  ufw allow from $INTERNAL_NETWORK_CIDR to any port $PIHOLE_PORT
 
   # Enable packet forwarding
   log "Modifying /etc/default/ufw and /etc/ufw/sysctl.conf to allow packet forwarding"
