@@ -20,8 +20,13 @@ PIHOLE_WEB_ADMIN_PASSWORD="admin"
 ##########################################################
 
 NTOPNG_CONF_FILE="/etc/ntopng/ntopng.conf"
+
 PIHOLE_URL="https://install.pi-hole.net"
-PIHOLE_CONF_FILE="/etc/pihole/setupVars.conf"
+PIHOLE_CONF_DIR="/etc/pihole"
+PIHOLE_CONF_FILE="${PIHOLE_CONF_DIR}/setupVars.conf"
+PIHOLE_DNS_PORT="53"
+
+HOSTNAME="pi-firewall"
 NAMESERVERS="8.8.8.8 208.67.222.222 192.168.1.1"
 DHCP_RANGE_START="192.168.1.100"
 DHCP_RANGE_END="192.168.1.251"
@@ -63,9 +68,15 @@ function add_and_update_packages {
 
 # Configure network & servics
 function configure_network_and_services {
+  # Set the hostname
+  hostnamectl set-hostname $HOSTNAME
+  echo "$INTERNAL_NIC_IP $HOSTNAME" >> /etc/hosts
+
   # Configure ntopng interface & port
   log "Configuring ntopng to bind to port $NTOPNG_PORT on interface $INTERNAL_NIC"
-  sed -i -e 's/^\s*-w=.*$/-i='"$INTERNAL_NIC"'\n-w='"$NTOPNG_PORT"'\n--community/g' $NTOPNG_CONF_FILE
+  echo "-i=$INTERNAL_NIC" >> $NTOPNG_CONF_FILE
+  echo "-W=$NTOPNG_PORT" >> $NTOPNG_CONF_FILE
+  echo "--commmunity" >> $NTOPNG_CONF_FILE
 
   # Configure sshd port
   log "Configuring sshd to bind to port $SSHD_PORT"
@@ -102,6 +113,7 @@ function configure_firewall {
   ufw allow $SSHD_PORT
   ufw allow from $INTERNAL_NETWORK_CIDR to any port $NTOPNG_PORT
   ufw allow from $INTERNAL_NETWORK_CIDR to any port $PIHOLE_PORT
+  ufw allow from $INTERNAL_NETWORK_CIDR to any port $PIHOLE_DNS_PORT
 
   # Enable packet forwarding
   log "Modifying /etc/default/ufw and /etc/ufw/sysctl.conf to allow packet forwarding"
@@ -136,6 +148,7 @@ function restart_networking_and_services {
 function install_pihole {
   # Define pihole configuration
   log "Configuring pihole install configuration file $PIHOLE_CONF_FILE"
+  mkdir -p $PIHOLE_CONF_DIR
 cat << EOF >> $PIHOLE_CONF_FILE
 PIHOLE_INTERFACE=$INTERNAL_NIC
 IPV4_ADDRESS=$INTERNAL_NIC_IP
@@ -180,6 +193,7 @@ configure_firewall
 restart_networking_and_services
 install_pihole
 
+set +x
 echo -e "\nssh server port: $SSHD_PORT (exposed on both $INTERNAL_NIC & $PUBLIC_NIC)"
 echo "ntopng web admin portal: https://$INTERNAL_NIC_IP:$NTOPNG_PORT (exposed only on $INTERNAL_NIC)"
 echo "pihole web admin portal: http://$INTERNAL_NIC_IP:/admin (exposed only on $INTERNAL_NIC)"
