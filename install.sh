@@ -181,7 +181,7 @@ EOF
   curl -L $PIHOLE_URL | bash /dev/stdin --unattended
   pihole -g
   pihole -a -p $PIHOLE_WEB_ADMIN_PASSWORD
-  sed -i -e "s/= 80/= $/g" /etc/lighttpd/lighttpd.conf
+  sed -i -e "s/= 80/= $PIHOLE_URL/g" /etc/lighttpd/lighttpd.conf
 }
 
 # main script
